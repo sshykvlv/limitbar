@@ -43,8 +43,8 @@ enum IconRenderer {
                 let x = 1 + CGFloat(i) * (barW + gap)
                 let track = NSBezierPath(roundedRect: NSRect(x: x, y: y, width: barW, height: barH),
                                          xRadius: barW / 2, yRadius: barW / 2)
-                // Нейтральный трек, читаемый и на светлой, и на тёмной строке меню.
-                NSColor(white: 0.5, alpha: 0.35).setFill()
+                // Белая подложка столбика (фидбэк владельца 11.07).
+                NSColor(white: 1.0, alpha: 0.5).setFill()
                 track.fill()
                 if let used = level.used {
                     let h = used > 0 ? max(barW, barH * used) : 0   // минимум — «точка», 0% — пусто

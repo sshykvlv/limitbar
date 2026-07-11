@@ -158,7 +158,7 @@ private struct RingGauge: View {
     // на hover подкручиваем цифру/подпись/трек под светлый фон.
     private var numberColor: Color { hovered ? .white : .primary }
     private var captionColor: Color { hovered ? .white.opacity(0.75) : Color(nsColor: .tertiaryLabelColor) }
-    private var trackColor: Color { hovered ? .white.opacity(0.3) : .white }
+    private var trackColor: Color { hovered ? .white.opacity(0.3) : Color(nsColor: .quaternaryLabelColor) }
 
     var body: some View {
         VStack(spacing: 1.5) {
