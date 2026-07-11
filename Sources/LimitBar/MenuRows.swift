@@ -8,27 +8,49 @@ struct AccountRowView: View {
     var email: String? = nil
     var plan: String? = nil
 
-    private var secondaryLine: String? {
-        guard let email, !email.isEmpty else { return nil }
-        if let plan, !plan.isEmpty { return "\(email) · \(plan)" }
-        return email
+    // Иконок/плашек в строке нет (решение 2026-07-11): аккаунт — первой строкой
+    // (главный сканируемый признак при нескольких аккаунтах одного сервиса),
+    // сервис — второй, окрашенным словом. Email уходит в hover-тултип.
+    private var serviceLabel: String {
+        switch kind {
+        case .claudeMain, .claudeOAuth: return "Claude Code"
+        case .codex: return "Codex"
+        }
+    }
+
+    private var serviceTint: Color {
+        switch kind {
+        case .claudeMain, .claudeOAuth: return Color(nsColor: NSColor(srgbRed: 0.80, green: 0.44, blue: 0.31, alpha: 1)) // Anthropic clay
+        case .codex: return Color(nsColor: NSColor(srgbRed: 0.36, green: 0.38, blue: 0.42, alpha: 1))                    // graphite
+        }
+    }
+
+    private var identityHelp: String {
+        var lines = [name, serviceLabel]
+        if let plan, !plan.isEmpty { lines[1] += " · \(plan)" }
+        if let email, !email.isEmpty { lines.append(email) }
+        return lines.joined(separator: "\n")
     }
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            ProviderTag(kind: kind)
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
                     .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
-                if let secondaryLine {
-                    Text(secondaryLine)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                HStack(spacing: 0) {
+                    Text(serviceLabel)
+                        .foregroundStyle(serviceTint)
+                    if let plan, !plan.isEmpty {
+                        Text(" · \(plan)")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .font(.system(size: 10, weight: .medium))
+                .lineLimit(1)
             }
-            .frame(width: 108, alignment: .leading)
+            .frame(width: 168, alignment: .leading)
+            .help(identityHelp)
             switch state {
             case .pending:
                 Spacer(minLength: 6)
@@ -110,37 +132,6 @@ struct AccountRowView: View {
             lines.append("Resets \(absolute) (\(rel.localizedString(for: resetsAt, relativeTo: .now)))")
         }
         return lines.joined(separator: "\n")
-    }
-}
-
-/// Small brand-colored label identifying the provider (CLAUDE / CODEX) so the model
-/// is readable at a glance regardless of the account's display name.
-private struct ProviderTag: View {
-    let kind: AccountKind
-
-    private var text: String {
-        switch kind {
-        case .claudeMain, .claudeOAuth: return "CLAUDE"
-        case .codex: return "CODEX"
-        }
-    }
-
-    private var tint: Color {
-        switch kind {
-        case .claudeMain, .claudeOAuth: return Color(nsColor: NSColor(srgbRed: 0.80, green: 0.44, blue: 0.31, alpha: 1)) // Anthropic clay
-        case .codex: return Color(nsColor: NSColor(srgbRed: 0.36, green: 0.38, blue: 0.42, alpha: 1))                    // graphite
-        }
-    }
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 8.5, weight: .bold))
-            .tracking(0.4)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2.5)
-            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-            .frame(width: 52, alignment: .leading)
     }
 }
 
