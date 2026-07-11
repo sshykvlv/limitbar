@@ -1,6 +1,8 @@
 import Foundation
 
-final class AccountStore {
+// @unchecked Sendable: only ever touched from @MainActor contexts (AppDelegate, OAuthFlow) —
+// never actually shared across threads, but the type isn't itself actor-isolated.
+final class AccountStore: @unchecked Sendable {
     private let key = "accounts"
     private let defaults: UserDefaults
     private(set) var accounts: [Account] = []
