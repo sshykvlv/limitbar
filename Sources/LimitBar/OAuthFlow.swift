@@ -111,13 +111,19 @@ final class OAuthFlow {
         let tokens = OAuthTokens(accessToken: access, refreshToken: refresh,
                                  expiresAt: Date().addingTimeInterval(expiresIn))
         let email = (d["account"] as? [String: Any])?["email_address"] as? String
-        if let reloginID {
-            try? KeychainStore.saveOwn(tokens, accountID: reloginID)
-        } else {
-            let account = Account(id: UUID(), name: email ?? "Claude 2",
-                                  kind: .claudeOAuth, email: email)
-            try? KeychainStore.saveOwn(tokens, accountID: account.id)
-            store.add(account)
+        do {
+            if let reloginID {
+                try KeychainStore.saveOwn(tokens, accountID: reloginID)
+            } else {
+                // Сохраняем токены ДО добавления аккаунта: если Keychain-запись
+                // не удалась, аккаунт не появляется (иначе он завис бы с «re-login»).
+                let account = Account(id: UUID(), name: email ?? "Claude 2",
+                                      kind: .claudeOAuth, email: email)
+                try KeychainStore.saveOwn(tokens, accountID: account.id)
+                store.add(account)
+            }
+        } catch {
+            NSSound.beep(); return
         }
         onDone()
     }
