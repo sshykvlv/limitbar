@@ -77,15 +77,16 @@ struct AccountRowView: View {
         .onHover { hovered = $0 }
     }
 
-    // Два горизонтальных бара друг под другом (фидбэк владельца 11.07: кольца делали
-    // строку плотной по высоте — гейджи разворачиваем в длину). Время сброса —
-    // всегда видимым абсолютным временем («когда», а не «через сколько»).
+    // Кольца вернулись (фидбэк владельца 11.07: «выглядели хорошо, я бы их не убирал»),
+    // но подпись переехала вбок: рядом с каждым кольцом — окно («5h»/«7d») и всегда
+    // видимое абсолютное время сброса («когда», а не «через сколько»). Так строка
+    // ниже и воздушнее, чем с подписью под кольцом.
     @ViewBuilder
     private func gauges(usage: Usage?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            BarGauge(label: "5h", window: usage?.fiveHour, hovered: hovered)
+        HStack(spacing: 12) {
+            RingGauge(label: "5h", window: usage?.fiveHour, hovered: hovered)
                 .help(resetHelp(title: "5-hour window", window: usage?.fiveHour))
-            BarGauge(label: "7d", window: usage?.sevenDay, hovered: hovered)
+            RingGauge(label: "7d", window: usage?.sevenDay, hovered: hovered)
                 .help(resetHelp(title: "Weekly window", window: usage?.sevenDay))
         }
     }
@@ -122,17 +123,17 @@ enum ResetClock {
     }
 }
 
-/// Горизонтальный гейдж: подпись окна, капсула-бар (заполнение = израсходовано,
-/// цвет зелёный/жёлтый/красный), процент и абсолютное время сброса «↻ 19:00».
-/// `window == nil` — нет данных: пустой трек, «—» вместо цифр.
+/// Кольцо-гейдж (процент внутри, дуга с круглыми капами — заполнение заканчивается
+/// закруглением, не рубленым краем) + сбоку колонка: окно («5h»/«7d») и абсолютное
+/// время сброса. `window == nil` — нет данных: пустой трек, «—» внутри.
 /// При исчерпании (>99%) время сброса становится главным ответом — красным и жирнее.
-private struct BarGauge: View {
+private struct RingGauge: View {
     let label: String
     let window: UsageWindow?
     var hovered: Bool = false
 
-    private static let barWidth: CGFloat = 64
-    private static let barHeight: CGFloat = 5
+    private static let diameter: CGFloat = 22
+    private static let lineWidth: CGFloat = 3
 
     private var fraction: Double {
         guard let window else { return 0 }
@@ -140,7 +141,7 @@ private struct BarGauge: View {
     }
     private var exhausted: Bool { (window?.utilization ?? 0) > 99 }
 
-    private var fillColor: Color {
+    private var ringColor: Color {
         let util = window?.utilization ?? 0
         if util > 90 { return Color(nsColor: .systemRed) }
         if util > 70 { return Color(nsColor: .systemYellow) }
@@ -158,30 +159,33 @@ private struct BarGauge: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(labelColor)
-                .frame(width: 14, alignment: .leading)
-            ZStack(alignment: .leading) {
-                Capsule().fill(trackColor)
-                    .frame(width: Self.barWidth, height: Self.barHeight)
-                if window != nil {
-                    Capsule().fill(fillColor)
-                        .frame(width: max(Self.barHeight, Self.barWidth * fraction), height: Self.barHeight)
+        HStack(spacing: 5) {
+            ZStack {
+                Circle()
+                    .stroke(trackColor, lineWidth: Self.lineWidth)
+                if window != nil, fraction > 0 {
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(ringColor, style: StrokeStyle(lineWidth: Self.lineWidth, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
                 }
+                Text(window.map { "\(Int($0.utilization))" } ?? "—")
+                    .font(.system(size: 9, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(numberColor)
             }
-            Text(window.map { "\(Int($0.utilization))%" } ?? "—")
-                .font(.system(size: 10, weight: .medium))
-                .monospacedDigit()
-                .foregroundStyle(numberColor)
-                .frame(width: 34, alignment: .trailing)
-            Text(resetText)
-                .font(.system(size: 9, weight: exhausted ? .semibold : .regular))
-                .monospacedDigit()
-                .foregroundStyle(resetColor)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .lineLimit(1)
+            .frame(width: Self.diameter, height: Self.diameter)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(label)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(labelColor)
+                Text(resetText)
+                    .font(.system(size: 9, weight: exhausted ? .semibold : .regular))
+                    .monospacedDigit()
+                    .foregroundStyle(resetColor)
+                    .lineLimit(1)
+            }
+            .frame(width: 60, alignment: .leading)
         }
     }
 
@@ -193,10 +197,11 @@ private struct BarGauge: View {
 }
 
 enum MenuRowFactory {
-    static let rowWidth: CGFloat = 372
-    // Height budget: gauge column = 2 бара по ~13pt + 4pt spacing ≈ 30pt,
-    // text column ~24pt; ~3pt воздуха сверху/снизу → 36pt.
-    static let rowHeight: CGFloat = 36
+    static let rowWidth: CGFloat = 368
+    // Height budget: кольцо 22pt (подпись сбоку, не снизу) vs текст-колонка ~24pt;
+    // ~4pt воздуха сверху/снизу → 32pt. Компактнее и колец-с-подписью-снизу (38pt),
+    // и горизонтальных баров (36pt).
+    static let rowHeight: CGFloat = 32
 
     static func item(for account: Account, state: AccountState) -> NSMenuItem {
         let item = NSMenuItem()
