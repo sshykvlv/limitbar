@@ -20,8 +20,14 @@ curl -sf https://chatgpt.com/backend-api/wham/usage \
 
 python3 - <<'EOF'
 import json
+# Редактируем PII владельца (репо публичный, парсеры эти поля не читают).
+REDACT = {"user_id": "user-REDACTED", "account_id": "acct-REDACTED", "email": "user@example.com"}
 for f in ("Tests/LimitBarTests/Fixtures/claude-usage.json",
           "Tests/LimitBarTests/Fixtures/codex-usage.json"):
     d = json.load(open(f))
+    for k, v in REDACT.items():
+        if k in d:
+            d[k] = v
+    json.dump(d, open(f, "w"), indent=2)
     print(f, "→ top-level keys:", sorted(d.keys()))
 EOF
