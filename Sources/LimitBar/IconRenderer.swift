@@ -29,46 +29,41 @@ enum IconRenderer {
     }
 
     static func image(levels: [BarLevel]) -> NSImage {
-        let barW: CGFloat = 3.5, gap: CGFloat = 2.5, barH: CGFloat = 15, canvasH: CGFloat = 18
+        // Тонкие столбцы — чтобы в строку меню помещалось больше аккаунтов.
+        let barW: CGFloat = 2.5, gap: CGFloat = 2, barH: CGFloat = 15, canvasH: CGFloat = 18
         let count = max(levels.count, 1)
         let width = CGFloat(count) * barW + CGFloat(count - 1) * gap + 2
-        let allNormal = levels.allSatisfy { $0.severity == .normal }
-        // Резолвим normal-цвет ПОД ТЕКУЩИЙ appearance один раз, до вызова NSImage(size:flipped:drawingHandler:) —
-        // сам drawingHandler может исполняться вне текущего appearance-контекста.
-        let normalColor: NSColor = {
-            var resolved = NSColor.labelColor
-            NSApplication.shared.effectiveAppearance.performAsCurrentDrawingAppearance {
-                resolved = NSColor.labelColor.usingColorSpace(.deviceRGB) ?? NSColor.labelColor
-            }
-            return resolved
-        }()
+        // Цветовое кодирование (зелёный/жёлтый/красный) — картинка всегда цветная,
+        // template оставляем только когда данных нет вовсе (пустой значок).
+        let hasData = levels.contains { $0.remaining != nil }
         let img = NSImage(size: NSSize(width: width, height: canvasH), flipped: false) { _ in
             let y = (canvasH - barH) / 2
             for (i, level) in levels.enumerated() {
                 let x = 1 + CGFloat(i) * (barW + gap)
                 let track = NSBezierPath(roundedRect: NSRect(x: x, y: y, width: barW, height: barH),
                                          xRadius: barW / 2, yRadius: barW / 2)
-                NSColor.black.withAlphaComponent(0.25).setFill()
+                // Нейтральный трек, читаемый и на светлой, и на тёмной строке меню.
+                NSColor(white: 0.5, alpha: 0.35).setFill()
                 track.fill()
                 if let remaining = level.remaining, remaining > 0 {
                     let h = max(barW, barH * remaining)   // минимум — «точка»
                     let fill = NSBezierPath(roundedRect: NSRect(x: x, y: y, width: barW, height: h),
                                             xRadius: barW / 2, yRadius: barW / 2)
-                    fillColor(for: level.severity, allNormal: allNormal, normalColor: normalColor).setFill()
+                    fillColor(for: level.severity).setFill()
                     fill.fill()
                 }
             }
             return true
         }
-        img.isTemplate = allNormal
+        img.isTemplate = !hasData
         return img
     }
 
-    private static func fillColor(for severity: Severity, allNormal: Bool, normalColor: NSColor) -> NSColor {
+    private static func fillColor(for severity: Severity) -> NSColor {
         switch severity {
         case .danger: return .systemRed
         case .warn: return .systemYellow
-        case .normal: return allNormal ? .black : normalColor
+        case .normal: return .systemGreen
         }
     }
 }

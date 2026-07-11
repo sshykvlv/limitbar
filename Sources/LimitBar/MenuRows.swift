@@ -8,13 +8,6 @@ struct AccountRowView: View {
     var email: String? = nil
     var plan: String? = nil
 
-    private var providerIcon: String {
-        switch kind {
-        case .claudeMain, .claudeOAuth: return "sparkles"
-        case .codex: return "chevron.left.forwardslash.chevron.right"
-        }
-    }
-
     private var secondaryLine: String? {
         guard let email, !email.isEmpty else { return nil }
         if let plan, !plan.isEmpty { return "\(email) · \(plan)" }
@@ -22,10 +15,8 @@ struct AccountRowView: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Image(systemName: providerIcon)
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
+        HStack(alignment: .center, spacing: 8) {
+            ProviderTag(kind: kind)
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
                     .font(.system(size: 13, weight: .medium))
@@ -37,13 +28,13 @@ struct AccountRowView: View {
                         .lineLimit(1)
                 }
             }
-            .frame(width: 90, alignment: .leading)
+            .frame(width: 108, alignment: .leading)
             switch state {
             case .pending:
                 Spacer(minLength: 6)
-                HStack(spacing: 10) {
-                    ringGauge(title: "5-hour window", caption: "5h", window: nil)
-                    ringGauge(title: "Weekly window", caption: "7d", window: nil)
+                HStack(spacing: 8) {
+                    ringGauge(title: "5-hour window", label: "5h", window: nil)
+                    ringGauge(title: "Weekly window", label: "7d", window: nil)
                 }
             case .failed(let badge):
                 Label(badge, systemImage: "exclamationmark.triangle")
@@ -51,9 +42,9 @@ struct AccountRowView: View {
                 Spacer()
             case .ok(let usage, _), .stale(let usage, _, _):
                 Spacer(minLength: 6)
-                HStack(spacing: 10) {
-                    ringGauge(title: "5-hour window", caption: "5h", window: usage.fiveHour)
-                    ringGauge(title: "Weekly window", caption: "7d", window: usage.sevenDay)
+                HStack(spacing: 8) {
+                    ringGauge(title: "5-hour window", label: "5h", window: usage.fiveHour)
+                    ringGauge(title: "Weekly window", label: "7d", window: usage.sevenDay)
                 }
                 if case .stale(_, _, let badge) = state {
                     Image(systemName: "exclamationmark.triangle")
@@ -66,24 +57,41 @@ struct AccountRowView: View {
         .frame(width: MenuRowFactory.rowWidth, height: MenuRowFactory.rowHeight, alignment: .leading)
     }
 
-    /// One ring gauge (utilization ring + numeric center + window caption) plus its
-    /// detailed hover tooltip. `window == nil` renders a faint empty track with "—".
+    /// One ring gauge + detailed hover tooltip. When the window is essentially exhausted
+    /// (>90% used), the caption switches from "5h"/"7d" to when it refreshes (e.g. "↻2h").
     @ViewBuilder
-    private func ringGauge(title: String, caption: String, window: UsageWindow?) -> some View {
-        RingGauge(value: window?.utilization, caption: caption,
-                  color: gaugeColor(window?.utilization ?? 0))
+    private func ringGauge(title: String, label: String, window: UsageWindow?) -> some View {
+        let util = window?.utilization ?? 0
+        let caption: String = {
+            if let window, window.utilization > 90, let short = shortReset(window.resetsAt) {
+                return "↻\(short)"
+            }
+            return label
+        }()
+        RingGauge(value: window?.utilization, caption: caption, color: gaugeColor(util))
             .help(resetHelp(title: title, window: window))
     }
 
+    /// Заполнение = израсходовано; цвет по остатку: спокойно — зелёный, ближе к концу — жёлтый/красный.
     private func gaugeColor(_ utilization: Double) -> Color {
         if utilization > 90 { return Color(nsColor: .systemRed) }
         if utilization > 70 { return Color(nsColor: .systemYellow) }
-        return Color(nsColor: .secondaryLabelColor)
+        return Color(nsColor: .systemGreen)
+    }
+
+    /// Компактное «через сколько сбросится»: 45m / 2h / 3d.
+    private func shortReset(_ date: Date?) -> String? {
+        guard let date else { return nil }
+        let secs = date.timeIntervalSinceNow
+        if secs <= 0 { return "now" }
+        let mins = Int(secs / 60)
+        if mins < 60 { return "\(max(mins, 1))m" }
+        let hrs = mins / 60
+        if hrs < 24 { return "\(hrs)h" }
+        return "\(hrs / 24)d"
     }
 
     /// Multi-line tooltip: "<title>\n<used>% used · <left>% left\nResets <abs> (<rel>)".
-    /// The "Resets" line is omitted when `resetsAt` is nil; the whole body collapses to
-    /// "<title>\nNo data" when there's no window at all for this account.
     private func resetHelp(title: String, window: UsageWindow?) -> String {
         guard let window else { return "\(title)\nNo data" }
         let used = Int(window.utilization)
@@ -92,35 +100,60 @@ struct AccountRowView: View {
         if let resetsAt = window.resetsAt {
             let absolute: String
             if Calendar.current.isDateInToday(resetsAt) {
-                let f = DateFormatter()
-                f.dateStyle = .none
-                f.timeStyle = .short
+                let f = DateFormatter(); f.dateStyle = .none; f.timeStyle = .short
                 absolute = f.string(from: resetsAt)
             } else {
-                let f = DateFormatter()
-                f.dateFormat = "EEE HH:mm"
+                let f = DateFormatter(); f.dateFormat = "EEE HH:mm"
                 absolute = f.string(from: resetsAt)
             }
-            let rel = RelativeDateTimeFormatter()
-            rel.unitsStyle = .full
-            let relative = rel.localizedString(for: resetsAt, relativeTo: .now)
-            lines.append("Resets \(absolute) (\(relative))")
+            let rel = RelativeDateTimeFormatter(); rel.unitsStyle = .full
+            lines.append("Resets \(absolute) (\(rel.localizedString(for: resetsAt, relativeTo: .now)))")
         }
         return lines.joined(separator: "\n")
     }
 }
 
+/// Small brand-colored label identifying the provider (CLAUDE / CODEX) so the model
+/// is readable at a glance regardless of the account's display name.
+private struct ProviderTag: View {
+    let kind: AccountKind
+
+    private var text: String {
+        switch kind {
+        case .claudeMain, .claudeOAuth: return "CLAUDE"
+        case .codex: return "CODEX"
+        }
+    }
+
+    private var tint: Color {
+        switch kind {
+        case .claudeMain, .claudeOAuth: return Color(nsColor: NSColor(srgbRed: 0.80, green: 0.44, blue: 0.31, alpha: 1)) // Anthropic clay
+        case .codex: return Color(nsColor: NSColor(srgbRed: 0.36, green: 0.38, blue: 0.42, alpha: 1))                    // graphite
+        }
+    }
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 8.5, weight: .bold))
+            .tracking(0.4)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2.5)
+            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .frame(width: 52, alignment: .leading)
+    }
+}
+
 /// A small circular utilization ring: faint background track + a clockwise-filling
-/// foreground arc starting at 12 o'clock, with the percentage centered and a tiny
-/// window-label caption underneath. `value == nil` means "no data" — only the faint
-/// track and a "—" are drawn, no foreground arc.
+/// foreground arc starting at 12 o'clock, the percentage centered, and a caption below.
+/// `value == nil` means "no data" — only the faint track and a "—" are drawn.
 private struct RingGauge: View {
     let value: Double?
     let caption: String
     let color: Color
 
-    private static let diameter: CGFloat = 26
-    private static let lineWidth: CGFloat = 3.5
+    private static let diameter: CGFloat = 22
+    private static let lineWidth: CGFloat = 3
 
     private var fraction: Double {
         guard let value else { return 0 }
@@ -128,7 +161,7 @@ private struct RingGauge: View {
     }
 
     var body: some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 1.5) {
             ZStack {
                 Circle()
                     .stroke(Color(nsColor: .quaternaryLabelColor), lineWidth: Self.lineWidth)
@@ -139,40 +172,33 @@ private struct RingGauge: View {
                         .rotationEffect(.degrees(-90))
                 }
                 Text(value.map { "\(Int($0))" } ?? "—")
-                    .font(.system(size: 9.5, weight: .medium))
+                    .font(.system(size: 9, weight: .medium))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
+                    .frame(width: Self.diameter, height: Self.diameter)
+                    .multilineTextAlignment(.center)
             }
             .frame(width: Self.diameter, height: Self.diameter)
             Text(caption)
-                .font(.system(size: 8.5))
+                .font(.system(size: 8))
                 .foregroundStyle(.tertiary)
         }
     }
 }
 
 enum MenuRowFactory {
-    // Width budget (padding 12·2 + icon ~16 + spacing 10 + name/email column 90 + spacing 10
-    // + flexible Spacer + two 26pt rings with 10pt gap between them (62) + spacing 10 +
-    // stale-badge icon ~10 in the worst case) bottoms out around 248pt; 300pt leaves the
-    // Spacer comfortable slack so the rings sit flush against the right padding without
-    // ever clipping.
-    static let rowWidth: CGFloat = 300
-    // Height budget: the ring block is the tallest element — 26pt ring + 1pt spacing +
-    // an 8.5pt caption (~10pt line height) ≈ 37pt — vs. the two-line text column
-    // (~13pt name + 1pt spacing + ~10pt secondary ≈ 29pt). Add ~2.5pt of padding above
-    // and below the taller ring block and round to 42pt.
-    static let rowHeight: CGFloat = 42
+    static let rowWidth: CGFloat = 322
+    // Height budget: 22pt ring + 1.5pt spacing + ~9pt caption ≈ 33pt (tallest element)
+    // vs. the two-line text column (~13 + 1 + ~10 ≈ 24pt). ~3pt padding top/bottom → 38pt.
+    static let rowHeight: CGFloat = 38
 
     static func item(for account: Account, state: AccountState) -> NSMenuItem {
         let item = NSMenuItem()
         let row = AccountRowView(name: account.name, state: state, kind: account.kind,
                                   email: account.email, plan: account.plan)
         let host = NSHostingView(rootView: row)
-        // Disable NSHostingView's own intrinsic-size layout pass so it can't grow/shrink
-        // past the explicit frame we set below after SwiftUI's first layout pass — a
-        // known NSHostingView-as-NSMenuItem.view gotcha that leaves stale sizing slack
-        // in the parent NSMenu's window. Available since macOS 13; this package targets 14+.
+        // Disable NSHostingView's own intrinsic-size layout so it can't leave stale sizing
+        // slack in the parent NSMenu window (the "gap after Quit" gotcha). macOS 13+.
         host.sizingOptions = []
         host.frame = NSRect(x: 0, y: 0, width: rowWidth, height: rowHeight)
         item.view = host

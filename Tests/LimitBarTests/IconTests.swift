@@ -36,11 +36,19 @@ final class IconTests: XCTestCase {
         XCTAssertEqual(IconRenderer.barLevels(s)[0].remaining!, 0.60, accuracy: 0.001)
     }
 
-    func testImageIsNonEmptyAndTemplateWhenCalm() {
+    func testImageIsColoredWhenHasData() {
+        // Цветовое кодирование: даже спокойный (normal) значок цветной (зелёный),
+        // поэтому не template.
         let s: [AccountState] = [.ok(Usage(fiveHour: .init(utilization: 20, resetsAt: nil),
                                            sevenDay: nil), fetchedAt: .init())]
         let img = IconRenderer.image(levels: IconRenderer.barLevels(s))
         XCTAssertTrue(img.size.width > 0 && img.size.height > 0)
+        XCTAssertFalse(img.isTemplate)
+    }
+
+    func testImageTemplateWhenNoData() {
+        let s: [AccountState] = [.pending, .failed(badge: "re-login")]
+        let img = IconRenderer.image(levels: IconRenderer.barLevels(s))
         XCTAssertTrue(img.isTemplate)
     }
 
