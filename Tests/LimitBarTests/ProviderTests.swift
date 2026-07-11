@@ -25,4 +25,26 @@ final class ProviderTests: XCTestCase {
             XCTAssertGreaterThan(t.expiresAt.timeIntervalSince1970, 1_700_000_000)
         }
     }
+
+    func testClaudeProviderSuccess() async throws {
+        MockURLProtocol.handler = { req in
+            XCTAssertEqual(req.value(forHTTPHeaderField: "anthropic-beta"), "oauth-2025-04-20")
+            XCTAssertTrue(req.value(forHTTPHeaderField: "User-Agent")?.hasPrefix("claude-code/") ?? false)
+            return (200, Data(#"{"five_hour":{"utilization":42,"resets_at":"2026-07-11T18:00:00Z"},"seven_day":{"utilization":13,"resets_at":"2026-07-14T09:00:00Z"}}"#.utf8))
+        }
+        let usage = try await ClaudeProvider(session: .mocked).fetchUsage(accessToken: "tok")
+        XCTAssertEqual(usage.fiveHour?.utilization, 42)
+    }
+
+    func testClaudeProvider401() async {
+        MockURLProtocol.handler = { _ in (401, Data()) }
+        do { _ = try await ClaudeProvider(session: .mocked).fetchUsage(accessToken: "tok"); XCTFail() }
+        catch { XCTAssertEqual(error as? FetchError, .unauthorized) }
+    }
+
+    func testClaudeProvider429() async {
+        MockURLProtocol.handler = { _ in (429, Data()) }
+        do { _ = try await ClaudeProvider(session: .mocked).fetchUsage(accessToken: "tok"); XCTFail() }
+        catch { XCTAssertEqual(error as? FetchError, .rateLimited) }
+    }
 }
