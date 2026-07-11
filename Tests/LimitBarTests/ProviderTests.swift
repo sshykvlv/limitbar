@@ -47,4 +47,34 @@ final class ProviderTests: XCTestCase {
         do { _ = try await ClaudeProvider(session: .mocked).fetchUsage(accessToken: "tok"); XCTFail() }
         catch { XCTAssertEqual(error as? FetchError, .rateLimited) }
     }
+
+    func testCodexAuthFileParsing() throws {
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("auth-test.json")
+        try #"{"tokens":{"access_token":"at","refresh_token":"rt","account_id":"acc"},"last_refresh":"2026-07-01T00:00:00Z"}"#
+            .write(to: tmp, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        let auth = try XCTUnwrap(CodexAuth.load(from: tmp))
+        XCTAssertEqual(auth.accessToken, "at")
+        XCTAssertEqual(auth.refreshToken, "rt")
+    }
+
+    func testCodexAuthMissingFileIsNil() {
+        let missing = FileManager.default.temporaryDirectory.appendingPathComponent("does-not-exist-\(UUID()).json")
+        XCTAssertNil(CodexAuth.load(from: missing))
+    }
+
+    func testCodexProviderSuccess() async throws {
+        MockURLProtocol.handler = { _ in
+            (200, Data(#"{"rate_limit":{"primary_window":{"used_percent":12,"reset_at":1784360440},"secondary_window":{"used_percent":23,"reset_at":1784360440}}}"#.utf8))
+        }
+        let usage = try await CodexProvider(session: .mocked).fetchUsage(accessToken: "at")
+        XCTAssertEqual(usage.fiveHour?.utilization, 12)
+        XCTAssertEqual(usage.sevenDay?.utilization, 23)
+    }
+
+    func testCodexProvider401() async {
+        MockURLProtocol.handler = { _ in (401, Data()) }
+        do { _ = try await CodexProvider(session: .mocked).fetchUsage(accessToken: "at"); XCTFail() }
+        catch { XCTAssertEqual(error as? FetchError, .unauthorized) }
+    }
 }
