@@ -13,6 +13,11 @@ final class AccountStore: @unchecked Sendable {
          hasClaudeMain: @escaping () -> Bool = { KeychainStore.claudeCodeTokens() != nil },
          hasCodex: @escaping () -> Bool = { CodexAuth.load() != nil }) {
         self.defaults = defaults
+        // Демо-режим: фиксированные аккаунты, без чтения/записи defaults и Keychain.
+        if MockData.enabled {
+            accounts = MockData.accounts
+            return
+        }
         if let data = defaults.data(forKey: key),
            let list = try? JSONDecoder().decode([Account].self, from: data) {
             accounts = list

@@ -30,6 +30,12 @@ final class Poller {
     func state(for id: UUID) -> AccountState { states[id] ?? .pending }
 
     private func pollAll(force: Bool) async {
+        // Демо-режим: фиксированные состояния вместо сети (см. MockData).
+        if MockData.enabled {
+            for account in store.accounts { states[account.id] = MockData.state(for: account.id) }
+            onUpdate?(states)
+            return
+        }
         await withTaskGroup(of: Void.self) { group in
             for account in store.accounts {
                 group.addTask { @MainActor in await self.poll(account, force: force) }
