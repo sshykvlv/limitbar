@@ -1,18 +1,28 @@
-/* LimitBar landing — graphite + amber, зеркалит структуру lidless-сайта. */
+/* LimitBar landing — light grey + amber. Структура зеркалит lidless-сайт,
+   но палитра своя: светло-серый фон, белые карточки, тёмный мокап меню
+   как контрастная витрина (фидбэк владельца 11.07 — «не как Lidless»). */
 :root {
-  --bg: #0a0a0e;
-  --panel: #121218;
-  --panel-2: #17171f;
-  --line: #26262f;
-  --text: #e9e7e3;
-  --dim: #9a97a3;
-  --faint: #6b6875;
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --panel-2: #f6f7f9;
+  --line: #dcdfe4;
+  --text: #16181d;
+  --dim: #555a64;
+  --faint: #878c96;
   --amber: #f5a93d;
+  --amber-text: #b97a10;
   --claude: #cc7050;
   --codex: #9094a0;
   --green: #4fc46f;
   --yellow: #e8b93c;
   --red: #e05d4f;
+  /* тёмный мокап меню — фиксированные цвета, не зависят от светлой темы */
+  --m-bg: #17171f;
+  --m-bar: #1c1c24;
+  --m-line: #26262f;
+  --m-text: #e9e7e3;
+  --m-dim: #9a97a3;
+  --m-faint: #6b6875;
   --radius: 14px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,10 +47,11 @@ em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 40
 .brand-mark { width: 20px; height: 20px; color: var(--text); }
 .brand-mark .bars-low { fill: var(--amber); }
 .brand-text { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
-.brand-accent { color: var(--amber); }
+.brand-accent { color: var(--amber-text); }
 .nav-buy {
   font-size: 14px; font-weight: 600; color: var(--dim);
   border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+  background: var(--panel);
   transition: color .15s, border-color .15s;
 }
 .nav-buy:hover { color: var(--text); border-color: var(--faint); }
@@ -49,11 +60,11 @@ em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 40
 .hero { text-align: center; padding: 64px 0 40px; position: relative; }
 .glow {
   position: absolute; inset: -80px 0 auto; height: 340px; pointer-events: none;
-  background: radial-gradient(420px 220px at 50% 30%, rgba(245, 169, 61, 0.13), transparent 70%);
+  background: radial-gradient(420px 220px at 50% 30%, rgba(245, 169, 61, 0.16), transparent 70%);
 }
-.hero-icon { width: 160px; height: 160px; border-radius: 36px; box-shadow: 0 18px 60px rgba(0,0,0,.55); }
+.hero-icon { width: 160px; height: 160px; border-radius: 36px; box-shadow: 0 18px 50px rgba(22, 26, 34, 0.28); }
 .hero h1 { font-size: clamp(38px, 6vw, 58px); line-height: 1.08; margin: 26px 0 18px; }
-.hero h1 em { color: var(--amber); }
+.hero h1 em { color: var(--amber-text); }
 .lede { max-width: 640px; margin: 0 auto; color: var(--dim); font-size: 17.5px; }
 .cta-row { margin-top: 28px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .btn {
@@ -64,63 +75,67 @@ em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 40
 .btn:active { transform: scale(.98); }
 .btn-primary { background: var(--amber); color: #1a1206; }
 .btn-primary:hover { background: #ffbe5c; }
-.btn-ghost { border: 1px solid var(--line); color: var(--dim); }
+.btn-ghost { border: 1px solid var(--line); color: var(--dim); background: var(--panel); }
 .btn-ghost:hover { color: var(--text); border-color: var(--faint); }
 .trust { color: var(--faint); font-size: 13.5px; }
 
-/* showcase: fake menubar + menu */
+/* showcase: fake menubar + menu (остаётся тёмным — как реальное меню macOS) */
 .showcase { padding: 36px 0 8px; text-align: center; }
 .screen {
-  max-width: 560px; margin: 0 auto; border: 1px solid var(--line);
-  border-radius: var(--radius); overflow: hidden; background: var(--panel);
-  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+  max-width: 620px; margin: 0 auto; border: 1px solid var(--m-line);
+  border-radius: var(--radius); overflow: hidden; background: var(--m-bg);
+  color: var(--m-text);
+  box-shadow: 0 24px 60px rgba(22, 26, 34, 0.25);
 }
 .menubar {
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
-  padding: 7px 14px; background: #1c1c24; border-bottom: 1px solid var(--line);
-  color: var(--faint);
+  padding: 7px 14px; background: var(--m-bar); border-bottom: 1px solid var(--m-line);
+  color: var(--m-faint);
 }
 .mb-glyph { width: 22px; height: 15px; fill: currentColor; }
 .mb-highlight {
   display: inline-flex; padding: 3px 7px; border-radius: 6px;
   background: rgba(245, 169, 61, 0.18);
 }
-.mb-bars { width: 18px; height: 18px; color: var(--text); }
+.mb-bars { width: 18px; height: 18px; color: var(--m-text); }
 .mb-bars .bars-low { fill: var(--amber); }
-.mb-clock { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
-.menu { padding: 8px; text-align: left; background: var(--panel-2); }
+.mb-clock { font-size: 13px; color: var(--m-dim); font-variant-numeric: tabular-nums; }
+.menu { padding: 8px; text-align: left; background: var(--m-bg); }
 .acct {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 12px; border-radius: 9px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 12px; border-radius: 9px;
 }
 .acct:hover { background: #2e6be6; }
-.acct:hover .acct-name, .acct:hover .acct-svc { color: #fff; }
+.acct:hover .acct-name, .acct:hover .acct-svc,
+.acct:hover .g-win, .acct:hover .g-reset { color: #fff; }
 .acct-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .acct-name { font-size: 14px; font-weight: 600; }
-.acct-svc { font-size: 11px; font-weight: 600; }
-.acct-svc.claude { color: var(--claude); }
-.acct-svc.codex { color: var(--codex); }
+.acct-svc { font-size: 11px; font-weight: 600; color: var(--m-dim); }
 
-/* CSS ring gauges: conic fill + inner cutout */
+/* CSS ring gauges: conic fill + inner cutout, подпись и время сброса сбоку */
+.gauge { display: inline-flex; align-items: center; gap: 7px; width: 104px; flex: none; }
 .ring {
   --v: 0; --c: var(--green);
-  width: 34px; height: 34px; border-radius: 50%; flex: none;
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
   background:
-    radial-gradient(closest-side, var(--panel-2) 72%, transparent 73% 100%),
+    radial-gradient(closest-side, var(--m-bg) 70%, transparent 71% 100%),
     conic-gradient(var(--c) calc(var(--v) * 1%), rgba(255,255,255,0.09) 0);
   display: grid; place-items: center;
 }
-.ring span { font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ring span { font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .ring.warn { --c: var(--yellow); }
 .ring.hot { --c: var(--red); }
-.ring.hot span { color: var(--red); }
+.g-col { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.g-win { font-size: 9.5px; font-weight: 600; color: var(--m-faint); }
+.g-reset { font-size: 11px; color: var(--m-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-reset.hot { color: var(--red); font-weight: 600; }
 
 .mi { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; }
 .mi:hover { background: #2e6be6; color: #fff; }
 .mi:hover .mi-kbd { color: rgba(255,255,255,0.75); }
-.mi-dim { color: var(--faint); }
-.mi-kbd { margin-left: auto; color: var(--faint); font-size: 12px; }
-.mi-sep { height: 1px; background: var(--line); margin: 6px 10px; }
+.mi-dim { color: var(--m-faint); }
+.mi-kbd { margin-left: auto; color: var(--m-faint); font-size: 12px; }
+.mi-sep { height: 1px; background: var(--m-line); margin: 6px 10px; }
 .showcase-cap { color: var(--faint); font-size: 14px; margin-top: 18px; max-width: 560px; margin-inline: auto; }
 .showcase-cap em { color: var(--red); font-style: normal; font-weight: 600; }
 
@@ -142,25 +157,38 @@ em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 40
 .num {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center;
-  background: rgba(245, 169, 61, 0.14); color: var(--amber); font-weight: 700; font-size: 14px;
+  background: rgba(245, 169, 61, 0.18); color: var(--amber-text); font-weight: 700; font-size: 14px;
 }
 .steps h4 { font-size: 15.5px; margin-bottom: 5px; }
 .steps p { color: var(--dim); font-size: 14px; }
 
-/* get */
-.buy { padding: 64px 0 12px; display: flex; justify-content: center; }
+/* get: две карточки — бесплатная прямая раздача и платная MAS-сборка */
+.buy {
+  padding: 64px 0 12px; display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; max-width: 800px; margin: 0 auto;
+}
 .price-card {
   text-align: center; background: var(--panel); border: 1px solid var(--line);
-  border-radius: 18px; padding: 38px 44px; max-width: 420px; width: 100%;
+  border-radius: 18px; padding: 32px 30px; display: flex; flex-direction: column;
 }
-.price { font-size: 40px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; }
-.price-mark { width: 30px; height: 30px; color: var(--text); }
+.price-badge {
+  align-self: center; font-size: 12px; font-weight: 700; letter-spacing: .02em;
+  color: var(--amber-text); background: rgba(245, 169, 61, 0.16);
+  border-radius: 999px; padding: 3px 12px; margin-bottom: 12px;
+}
+.price { font-size: 36px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.price-mark { width: 28px; height: 28px; color: var(--text); }
 .price-mark .bars-low { fill: var(--amber); }
-.price-sub { color: var(--dim); margin: 4px 0 20px; }
+.price-sub { color: var(--dim); margin: 4px 0 18px; font-size: 15px; }
 .price-card .btn-primary { width: 100%; justify-content: center; }
-.price-meta { color: var(--faint); font-size: 13px; margin: 12px 0 18px; }
+.price-meta { color: var(--faint); font-size: 13px; margin: 12px 0 16px; }
 .btn-gh { width: 100%; justify-content: center; }
 .gh-mark { width: 16px; height: 16px; }
+.btn-soon {
+  width: 100%; justify-content: center; cursor: default;
+  border: 1px dashed var(--line); color: var(--faint); background: var(--panel-2);
+}
+.price-card .spacer { flex: 1; }
 
 /* faq */
 .faq { padding: 64px 0 12px; max-width: 720px; margin: 0 auto; }
@@ -193,8 +221,9 @@ em { font-family: "Instrument Serif", serif; font-style: italic; font-weight: 40
 .footer-links a:hover { color: var(--text); }
 
 @media (max-width: 760px) {
-  .bites, .steps { grid-template-columns: 1fr; }
+  .bites, .steps, .buy { grid-template-columns: 1fr; }
   .tipbar { flex-direction: column; text-align: center; }
   .hero { padding-top: 40px; }
   .hero-icon { width: 120px; height: 120px; border-radius: 27px; }
+  .gauge { width: 96px; }
 }

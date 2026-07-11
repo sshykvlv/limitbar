@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="LimitBar — Claude Code &amp; Codex limits in your menu bar" />
 <meta name="twitter:description" content="Live usage gauges for every Claude Code and Codex account — 5-hour window, weekly cap, reset times. Free &amp; open source." />
 <meta name="twitter:image" content="https://limitbar.ykv.lv/assets/og.png" />
-<meta name="theme-color" content="#0a0a0e" />
+<meta name="theme-color" content="#eef0f3" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -46,7 +46,7 @@
     "Live 5-hour and weekly usage gauges for Claude Code and Codex",
     "Multiple accounts side by side — add extra Claude accounts via OAuth",
     "Menu-bar bars turn yellow and red as a window fills up",
-    "Exact reset times on hover, refresh countdown when a window is exhausted",
+    "Exact reset time always visible next to every gauge",
     "Tokens stay in the macOS Keychain; talks only to the official usage endpoints",
     "Universal binary (Apple Silicon + Intel), signed and notarized by Apple"
   ],
@@ -81,13 +81,13 @@
     },
     {
       "@type": "Question",
-      "name": "Why isn't LimitBar on the Mac App Store?",
-      "acceptedAnswer": { "@type": "Answer", "text": "It reads your existing CLI logins (like the local Codex session) to save you re-authenticating — the App Store sandbox forbids that. So it ships directly, signed and notarized by Apple, like most developer utilities." }
+      "name": "What is the difference between the free and the App Store version?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The gauges are identical. The free direct download picks up existing CLI logins automatically; the paid Mac App Store build (coming soon) trades that for one-click install and automatic updates through the Store, with a one-time OAuth sign-in instead." }
     },
     {
       "@type": "Question",
       "name": "Is LimitBar free?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes — free and open source under the MIT license. There is an optional tip jar if it saves you from a mid-task lockout." }
+      "acceptedAnswer": { "@type": "Answer", "text": "The direct download is free and open source under the MIT license, forever. A paid Mac App Store convenience build of the same app is coming for people who prefer the Store. There is an optional tip jar as well." }
     }
   ]
 }
@@ -138,26 +138,26 @@
         <div class="acct">
           <div class="acct-id">
             <span class="acct-name">Main</span>
-            <span class="acct-svc claude">Claude Code · Max 20x</span>
+            <span class="acct-svc">Claude Code · Max 20x</span>
           </div>
-          <span class="ring g62" style="--v:62"><span>62</span></span>
-          <span class="ring g41" style="--v:41"><span>41</span></span>
+          <span class="gauge"><span class="ring" style="--v:62"><span>62</span></span><span class="g-col"><span class="g-win">5h</span><span class="g-reset">↻ 19:00</span></span></span>
+          <span class="gauge"><span class="ring" style="--v:41"><span>41</span></span><span class="g-col"><span class="g-win">7d</span><span class="g-reset">↻ Tue 09:00</span></span></span>
         </div>
         <div class="acct">
           <div class="acct-id">
             <span class="acct-name">Max 2</span>
-            <span class="acct-svc claude">Claude Code · Max 20x</span>
+            <span class="acct-svc">Claude Code · Max 20x</span>
           </div>
-          <span class="ring warn" style="--v:84"><span>84</span></span>
-          <span class="ring" style="--v:53"><span>53</span></span>
+          <span class="gauge"><span class="ring warn" style="--v:84"><span>84</span></span><span class="g-col"><span class="g-win">5h</span><span class="g-reset">↻ 17:30</span></span></span>
+          <span class="gauge"><span class="ring" style="--v:53"><span>53</span></span><span class="g-col"><span class="g-win">7d</span><span class="g-reset">↻ Wed 12:00</span></span></span>
         </div>
         <div class="acct">
           <div class="acct-id">
             <span class="acct-name">Codex</span>
-            <span class="acct-svc codex">Codex · Plus</span>
+            <span class="acct-svc">Codex · Plus</span>
           </div>
-          <span class="ring hot" style="--v:97"><span>97</span></span>
-          <span class="ring" style="--v:71"><span>71</span></span>
+          <span class="gauge"><span class="ring hot" style="--v:100"><span>100</span></span><span class="g-col"><span class="g-win">5h</span><span class="g-reset hot">↻ 15:12</span></span></span>
+          <span class="gauge"><span class="ring warn" style="--v:71"><span>71</span></span><span class="g-col"><span class="g-win">7d</span><span class="g-reset">↻ Fri 08:00</span></span></span>
         </div>
         <div class="mi-sep"></div>
         <div class="mi"><span class="mi-label">Add Claude Account…</span></div>
@@ -166,7 +166,7 @@
         <div class="mi"><span class="mi-label">Quit LimitBar</span><span class="mi-kbd">⌘Q</span></div>
       </div>
     </div>
-    <p class="showcase-cap">Rows are accounts; rings are the 5-hour and weekly windows. Green is headroom, yellow is “wrap it up”, red shows when it refreshes — <em>↻2h</em> beats a surprise lockout.</p>
+    <p class="showcase-cap">Rows are accounts; rings are the 5-hour and weekly windows, each with its exact reset time. Green is headroom, yellow is “wrap it up”, and when a window runs dry the clock turns red — <em>↻ 15:12</em> beats a surprise lockout.</p>
   </section>
 
   <!-- HIGHLIGHTS -->
@@ -179,7 +179,7 @@
     <div class="bite">
       <span class="emoji">🧱</span>
       <h3>The wall, before you hit it</h3>
-      <p>The menu-bar bars slide green → yellow → red as a window fills. Hover any ring for the exact reset time — plan the heavy run instead of discovering the cap mid-task.</p>
+      <p>The menu-bar bars slide green → yellow → red as a window fills. Every ring carries its exact reset time — plan the heavy run instead of discovering the cap mid-task.</p>
     </div>
     <div class="bite">
       <span class="emoji">🪶</span>
@@ -198,14 +198,24 @@
     </ol>
   </section>
 
-  <!-- GET -->
+  <!-- GET: direct build is free & open source; a paid App Store build is planned -->
   <section class="buy" id="get">
     <div class="price-card">
+      <span class="price-badge">Direct download</span>
       <p class="price"><svg class="price-mark" aria-hidden="true"><use href="#bars"/></svg>Free</p>
       <p class="price-sub">Open source. Yours forever.</p>
+      <span class="spacer"></span>
       <a class="btn btn-primary" href="https://github.com/sshykvlv/limitbar/releases/latest/download/LimitBar.zip" data-umami-event="download">Download for macOS</a>
-      <p class="price-meta">Apple Silicon &amp; Intel · macOS 13+ · notarized</p>
+      <p class="price-meta">Apple Silicon &amp; Intel · macOS 13+ · notarized · picks up your CLI logins automatically</p>
       <a class="btn btn-ghost btn-gh" href="https://github.com/sshykvlv/limitbar" data-umami-event="github"><svg class="gh-mark" aria-hidden="true"><use href="#gh"/></svg>View on GitHub</a>
+    </div>
+    <div class="price-card">
+      <span class="price-badge">Mac App Store</span>
+      <p class="price">$4.99</p>
+      <p class="price-sub">Same gauges, Store convenience.</p>
+      <span class="spacer"></span>
+      <span class="btn btn-soon">Coming soon</span>
+      <p class="price-meta">One-click install · automatic updates through the App Store · for people who’d rather not download zips</p>
     </div>
   </section>
 
@@ -230,12 +240,12 @@
         <p>Tokens live in the macOS Keychain, never in plain files. LimitBar talks only to the official Anthropic and OpenAI endpoints, and every line of it is open source on GitHub.</p>
       </details>
       <details>
-        <summary>Why isn’t it on the Mac App Store?</summary>
-        <p>It reads your existing CLI logins (like the local Codex session) to save you re-authenticating — the App Store sandbox forbids that. So it ships directly, signed and notarized by Apple, like most developer utilities.</p>
+        <summary>What’s the difference between the free and the App Store version?</summary>
+        <p>The gauges are identical. The free direct download can pick up your existing CLI logins automatically — the App Store sandbox doesn’t allow that, so the Store build asks you to sign in to Claude once (normal OAuth) and to point it at your Codex folder. In exchange you get one-click install and automatic updates through the Store. Pick whichever fits you; the direct build stays free and open source either way.</p>
       </details>
       <details>
         <summary>Is LimitBar really free?</summary>
-        <p>Yes — free and open source under the MIT license. There’s an optional tip jar if it saves you from a mid-task lockout.</p>
+        <p>The direct download is — free and open source under the MIT license, forever. The upcoming Mac App Store version is a paid convenience build of the same app, for people who prefer installing and updating through the Store. There’s also an optional tip jar if the free build saves you from a mid-task lockout.</p>
       </details>
     </div>
   </section>
